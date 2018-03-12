@@ -1,0 +1,23 @@
+<div class="center jumbotron">
+  <h1>Validate your Data</h1>
+  <div class="row">
+  <div class="col-md-6 col-md-offset-3">
+
+<div class="row">
+  <div class="col-md-12 col-md-offset-0">
+    <%= form_for(@user) do |f| %>
+      <div class = "orb">
+      <%= f.label :SQL_File_To_Use%>
+      <%= f.file_field :dir, :required => true, :accept=>".sql"%>        
+
+      <%= f.label :Checksum_File_To_Use%>
+      <%= f.file_field :d, :required => true, :accept=>".txt"%> 
+      </div>
+  </div>
+      <%= f.submit "Submit", name:"validate_file" ,class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>
+
+  </div>
+</div>

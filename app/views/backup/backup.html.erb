@@ -1,0 +1,31 @@
+<div class="center jumbotron">
+  <h1>BackUp your Data</h1>
+  <div class="row">
+  <div class="col-md-6 col-md-offset-3">
+
+<div class="row">
+  <div class="col-md-12 col-md-offset-0">
+    <%= form_for(@backup=BackUp.new) do |f| %>
+
+      <%= f.label :Mysql_Server_HostName %>
+      <%= f.text_field :host, class: 'form-control' %>
+
+      <%= f.label :Mysql_Server_UserName %>
+      <%= f.text_field :u, class: 'form-control' %>
+
+      <%= f.label :Mysql_Server_Password %>
+      <%= f.password_field :p, class: 'form-control' %>
+      
+	    <%= f.label :Backup_What? %><br />
+	    <%= f.radio_button :all, 1 %> All_Databases
+	    <%= f.radio_button :all, 2 %> Individual_Database
+	    <%= f.radio_button :all, 3, :checked => true %> Individual_Table </br>  
+
+  </div>
+      <%= f.submit "Submit",name:"submit" ,class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>
+
+  </div>
+</div>
