@@ -2,9 +2,14 @@
 <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
  <%= javascript_include_tag "application" 'data-turbolinks-track'=> true %>
   <%= render 'layouts/shim' %> <%= render 'layouts/header' %>
+  <% flash.each do |key, value| %>
+  	<% if value != "" %>
+    	<div class="alert_alert_<%= key %>"><%= value %></div>
+    <% end %>
+    <% end %>
+    <% flash[:error] =""%>
+ 	<% flash[:success] =""%>
   <div class="container">
   
 <%= yield %> 
 </div>
-
-	
