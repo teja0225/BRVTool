@@ -6,6 +6,8 @@ class UsersController < ApplicationController
   end
 
   def create
+	  flash[:error]=""
+  	flash[:success]=""
   	#all views are handles in this controller, check for action based on button pressed
   	if params[:submit] 
   		flash[:error]=""
@@ -46,10 +48,10 @@ class UsersController < ApplicationController
 		  				findDBChecksum @user[:u],@user[:p],@user[:host],row['Database'],f
 		  				f.close
 	  					flash[:success] = "BackUp success! You can find the backup in #{@dir}"
-	  					render 'users/result'
+	  					render 'users/new'
 	  				else
 	  					flash[:error] = "BackUp Unsuccessful!" 
-	  					render 'users/result'
+	  					render 'users/new'
 	  				end
 
 					end
@@ -69,7 +71,7 @@ class UsersController < ApplicationController
 	  	rescue
 	  		#display error message
 	  		flash[:error] = "Incorrect Database Credentials!" 
-	  		render 'users/result'
+	  		render 'users/new'
 	  	end
 
 	  elsif params[:add_db] 
@@ -104,10 +106,10 @@ class UsersController < ApplicationController
 		  		findDBChecksum @user[:u],@user[:p],@user[:host],@user[:d],f
 		  		f.close
 		  		flash[:success] = "BackUp success! You can find the backup in #{@dir}"
-		  		render 'users/result'
+		  		render 'users/new'
 	  		else
 		  		flash[:error] = "BackUp Unsuccessful!" 
-		  		render 'users/result'
+		  		render 'users/new'
 	  		end
 	  	
 	  	elsif @user[:all]== 3
@@ -120,7 +122,7 @@ class UsersController < ApplicationController
 	  	end
 	  	rescue
 	  		flash[:error] = "Lost connection to Database!" 
-	  		render 'users/result'
+	  		render 'users/new'
 	  	end
 
 	  elsif params[:add_tab] 
@@ -145,14 +147,14 @@ class UsersController < ApplicationController
 		  	findTabChecksum @user[:u],@user[:p],@user[:host],@user[:d],@user[:t],f
 		  	f.close
 	  		flash[:success] = "BackUp success! You can find the backup in #{@dir}"
-	  		render 'users/result'
+	  		render 'users/new'
 	  	else
 	  		flash[:error] = "BackUp Unsuccessful!" 
-	  		render 'users/result'
+	  		render 'users/new'
 	  	end
 	  	rescue
 	  		flash[:error] = "Lost connection to Database!" 
-	  		render 'users/result'
+	  		render 'users/new'
 	  	end
 	  	
 	  elsif params[:restore] 
@@ -174,7 +176,7 @@ class UsersController < ApplicationController
 	  	render 'users/restore2'
 	  	rescue
 	  		flash[:error] = "Incorrect Database Credentials!" 
-	  		render 'users/result'
+	  		render 'users/restore'
 	  	end
 
 	  elsif params[:add_res_db] 
@@ -194,14 +196,14 @@ class UsersController < ApplicationController
 	  	#check status of restore
 	  	if $?.exitstatus == 0
 	  		flash[:success] = "Restore success!"
-	  		render 'users/result'
+	  		render 'users/restore'
 	  	else
 	  		flash[:error] = "Restore Unsuccessful!" 
-	  		render 'users/result'
+	  		render 'users/restore'
 	  	end
 	  	rescue
 	  		flash[:error] = "Lost connection to Database!" 
-	  		render 'users/result'
+	  		render 'users/restore'
 	  	end
 
 	  elsif params[:validate] 
@@ -216,8 +218,12 @@ class UsersController < ApplicationController
 	           :host     => @user[:host],
 	           :password => @user[:p]
 	         )
-
+	
 	  	if @user[:all] == 3
+
+	  		#dummy query to check if db credentials are correct before rendering another page
+	  		@result = ActiveRecord::Base.connection.exec_query('SHOW DATABASES')
+	  	
 	  		#fetch session parameters passed
 	  		session[:passed_variable] = "#{@user[:u]}$#{@user[:p]}$#{@user[:host]}"
 	  		render 'users/validateFile'
@@ -231,7 +237,7 @@ class UsersController < ApplicationController
 	  	end
 	  	rescue
 	  		flash[:error] = "Incorrect Database Credentials!" 
-	  		render 'users/result'
+	  		render 'users/validate'
 	  	end
 
 	  elsif params[:validate_file]
@@ -285,21 +291,21 @@ class UsersController < ApplicationController
 				#check contents identity
 				if content1==content2
 					flash[:success] = "Validation Success! Your files are consistent!"
-		  		render 'users/result'	
+		  		render 'users/validate'	
 		  	else
 		  		flash[:error] = "Your files are inconsistent!"
-		  		render 'users/result'	
+		  		render 'users/validate'	
 		  	end
 
 		  	#drop dummy database created
 		  	ActiveRecord::Base.connection.exec_query('drop database dumb')	
 	  	else
 	  		flash[:error] = "Internal error occurred!"
-	  		render 'users/result'
+	  		render 'users/validate'
 	  	end
 	  	rescue
 	  		flash[:error] = "Lost connection to Database!" 
-	  		render 'users/result'
+	  		render 'users/validate'
 	  	end
 
 	  elsif params[:validate_db] 
@@ -341,10 +347,10 @@ class UsersController < ApplicationController
 				#check contents identity
 				if content1==content2
 					flash[:success] = "Validation Success! Your files are consistent!"
-	  			render 'users/result'	
+	  			render 'users/validate'	
 	  		else
 	  			flash[:error] = "Your files are inconsistent!"
-	  			render 'users/result'	
+	  			render 'users/validate'	
 	  		end
 
 		 	elsif @user[:all]==2
@@ -357,7 +363,7 @@ class UsersController < ApplicationController
 		 	end
 		 	rescue
 		 		flash[:error] = "Lost connection to Database!" 
-	  		render 'users/result'
+	  		render 'users/validate'
 		 	end
 
 		elsif params[:validate_tab] 
@@ -398,14 +404,14 @@ class UsersController < ApplicationController
 			#check for identity
 			if content1==content2
 				flash[:success] = "Validation Success! Your files are consistent!"
-	  		render 'users/result'	
+	  		render 'users/validate'	
 	  	else
 	  		flash[:error] = "Your files are inconsistent!"
-	  		render 'users/result'	
+	  		render 'users/validate'	
 	  	end
 	  	rescue
 	  		flash[:error] = "Lost connection to Database!" 
-	  		render 'users/result'
+	  		render 'users/validate'
 	  	end
 	  end
   end
