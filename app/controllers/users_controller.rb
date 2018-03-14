@@ -1,14 +1,14 @@
 require 'fileutils'
 class UsersController < ApplicationController
 
-	def new
+  def new
   	@user = User.new
   end
 
   def create
-	  flash[:error]=""
+	flash[:error]=""
   	flash[:success]=""
-  	#all views are handles in this controller, check for action based on button pressed
+  	#all views are handled in this controller, check for action based on button pressed
   	if params[:submit] 
   		flash[:error]=""
   		flash[:success]=""
@@ -38,7 +38,7 @@ class UsersController < ApplicationController
 	  	  		FileUtils.mkdir_p @dir
 
 	  	  		#create dump via bash
-	  	  		`mysqldump --user=#{@user[:u]} --password=#{@user[:p]} --host=#{@user[:host]} #{row['Database']}  > #{@dir}/backup.sql`
+	  	  		`mysqldump --single-transaction --user=#{@user[:u]} --password=#{@user[:p]} --host=#{@user[:host]} #{row['Database']}  > #{@dir}/backup.sql`
 					  
 					  #check status of dump
 	  				if $?.exitstatus == 0
@@ -98,7 +98,7 @@ class UsersController < ApplicationController
 	  	  FileUtils.mkdir_p @dir
 
 	  	  #create dump
-	  		`mysqldump --user=#{@user[:u]} --password=#{@user[:p]} --host=#{@user[:host]} #{@user[:d]}  > #{@dir}/backup.sql`
+	  		`mysqldump --single-transaction --user=#{@user[:u]} --password=#{@user[:p]} --host=#{@user[:host]} #{@user[:d]}  > #{@dir}/backup.sql`
 					  
 	  		if $?.exitstatus == 0
 	  			#calculate checksum and store in file
@@ -134,11 +134,11 @@ class UsersController < ApplicationController
 	  	@user[:u],@user[:p],@user[:host],@user[:all],@user[:d]= session[:passed_variable].split("-");
 
 	  	#create directory to store dump file
-	  	@dir=ENV['HOME']+"/BRV/#{@user[:d]}"
+	  	@dir=ENV['HOME']+"/BRV/#{@user[:d]}/#{@user[:t]}"
 	  	FileUtils.mkdir_p @dir
 
 	  	#create dump
-	  	`mysqldump --user=#{@user[:u]} --password=#{@user[:p]} --host=#{@user[:host]} #{@user[:d]} #{@user[:t]}  > #{@dir}/backup.sql`
+	  	`mysqldump --single-transaction --user=#{@user[:u]} --password=#{@user[:p]} --host=#{@user[:host]} #{@user[:d]} #{@user[:t]}  > #{@dir}/backup.sql`
 			
 	  	#check status of dump
 	  	if $?.exitstatus == 0
@@ -274,6 +274,8 @@ class UsersController < ApplicationController
 	  		f = File.open("cs.txt",'w');
 	  		findDBChecksum @user[:u],@user[:p],@user[:host],"dumb",f
 	  		f.close
+	  		#drop dummy database created
+		  	ActiveRecord::Base.connection.exec_query('drop database dumb')	
 
 	  		#open checksum created
 	  		f1 = File.open("cs.txt","r")
@@ -284,21 +286,23 @@ class UsersController < ApplicationController
 				content1 = f1.read
 				content2 = f2.read
 
-				#skip new lines
-				content1.delete!("\n")
-				content2.delete!("\n")
+				con1 = content1.split("\n")
+				con2 = content2.split("\n")
+				total_number = con2.length
+				diff = con2 - con1
+				puts "total: #{total_number}"
+				puts "diff: #{diff.length}"
 
 				#check contents identity
-				if content1==content2
+				if diff.length==0
 					flash[:success] = "Validation Success! Your files are consistent!"
-		  		render 'users/validate'	
-		  	else
-		  		flash[:error] = "Your files are inconsistent!"
-		  		render 'users/validate'	
-		  	end
+	  			render 'users/validate'	
+				else
+					percent = diff.length.to_f / total_number.to_f * 100.0
+					flash[:error] = "#{percent} percentage of your data is corrupted!"
+	  			render 'users/validate'	
+				end
 
-		  	#drop dummy database created
-		  	ActiveRecord::Base.connection.exec_query('drop database dumb')	
 	  	else
 	  		flash[:error] = "Internal error occurred!"
 	  		render 'users/validate'
@@ -340,18 +344,22 @@ class UsersController < ApplicationController
 				content1 = f1.read
 				content2 = f2.read
 
-				#skip new lines
-				content1.delete!("\n")
-				content2.delete!("\n")
+				con1 = content1.split("\n")
+				con2 = content2.split("\n")
+				total_number = con2.length
+				diff = con2 - con1
+				puts "total: #{total_number}"
+				puts "diff: #{diff.length}"
 
 				#check contents identity
-				if content1==content2
+				if diff.length==0
 					flash[:success] = "Validation Success! Your files are consistent!"
 	  			render 'users/validate'	
-	  		else
-	  			flash[:error] = "Your files are inconsistent!"
+				else
+					percent = diff.length.to_f / total_number.to_f * 100.0
+					flash[:error] = "#{percent} percentage of your data is corrupted!"
 	  			render 'users/validate'	
-	  		end
+				end
 
 		 	elsif @user[:all]==2
 		 		#fetch tables in the selected database
@@ -397,18 +405,23 @@ class UsersController < ApplicationController
 			content1 = f1.read
 			content2 = f2.read
 
-			#skip new lines
-			content1.delete!("\n")
-			content2.delete!("\n")
+			con1 = content1.split("\n")
+			con2 = content2.split("\n")
+			total_number = con2.length
+			diff = con2 - con1
+			puts "total: #{total_number}"
+			puts "diff: #{diff.length}"
 
-			#check for identity
-			if content1==content2
+				#check contents identity
+			if diff.length==0
 				flash[:success] = "Validation Success! Your files are consistent!"
+  			render 'users/validate'	
+			else
+				percent = diff.length.to_f / total_number.to_f * 100.0
+				flash[:error] = "#{percent} percentage of your data is corrupted!"
 	  		render 'users/validate'	
-	  	else
-	  		flash[:error] = "Your files are inconsistent!"
-	  		render 'users/validate'	
-	  	end
+			end
+			
 	  	rescue
 	  		flash[:error] = "Lost connection to Database!" 
 	  		render 'users/validate'
@@ -463,13 +476,13 @@ private
  		@result = ActiveRecord::Base.connection.exec_query("select column_name from information_schema.columns where table_schema='#{db}' and table_name='#{tab}'")
  		@MDF_String=""
  		
- 		#constrcy Md5 string to pass to MD5 function to calculate checksum of each row
- 		#insert 2 between every column to differentiate between ab2cd and abc2d, if any of the columns data will be shuffled
+ 		#construct Md5 string to pass to MD5 function to calculate checksum of each row
+ 		#insert 2 between every column to differentiate between ab?cd and abc?d, if any of the columns data will be shuffled
  		@result.each do |row|
-	  	@a="IFNULL(#{row['column_name']},\"A\"),\"2\","
+	  	@a="IFNULL(#{row['column_name']},\"A\"),\"?\","
 	  	@MDF_String="#{@MDF_String}#{@a}"
 		end
-		@MDF_String="#{@MDF_String}\"2\""
+		@MDF_String="#{@MDF_String}\"?\""
 
 		#calculate table checksum row wise
 		@TabCs = ActiveRecord::Base.connection.exec_query("select MD5(concat(#{@MDF_String})) as md5Checksum from #{db}.#{tab}")
