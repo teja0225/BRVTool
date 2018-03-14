@@ -299,7 +299,7 @@ class UsersController < ApplicationController
 	  			render 'users/validate'	
 				else
 					percent = diff.length.to_f / total_number.to_f * 100.0
-					flash[:error] = "#{percent} percentage of your data is corrupted!"
+					flash[:error] = "#{percent.abs.round(2)} percent of your data is corrupted!"
 	  			render 'users/validate'	
 				end
 
@@ -357,7 +357,7 @@ class UsersController < ApplicationController
 	  			render 'users/validate'	
 				else
 					percent = diff.length.to_f / total_number.to_f * 100.0
-					flash[:error] = "#{percent} percentage of your data is corrupted!"
+					flash[:error] = "#{percent.abs.round(2)} percent of your data is corrupted!"
 	  			render 'users/validate'	
 				end
 
@@ -418,7 +418,7 @@ class UsersController < ApplicationController
   			render 'users/validate'	
 			else
 				percent = diff.length.to_f / total_number.to_f * 100.0
-				flash[:error] = "#{percent} percentage of your data is corrupted!"
+				flash[:error] = "#{percent.abs.round(2)} percent of your data is corrupted!"
 	  		render 'users/validate'	
 			end
 			
